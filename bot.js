@@ -119,7 +119,8 @@ bot.on('message', async (msg) => {
 
     if (step === 0) {
         bot.sendMessage(chatId, 'О чем нужно напомнить?');
-        userStates.set(userId, { date, step: 1, answers });
+        const currentState = userStates.get(userId) || {};
+        userStates.set(userId, { ...currentState, step: 1 });
     } else if (step === 1) {
         const [time, text] = answers;
 
