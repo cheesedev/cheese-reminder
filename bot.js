@@ -135,8 +135,10 @@ function mainMenu() {
                     {text: '📅 Запланировать', callback_query: 'schedule'},
                     {text: '📋 Список', callback_query: 'list'},
                     {text: '📖 Команды', callback_query: 'help'},
-                    {text: '📍 Отправить геопозицию', request_location: true}
                 ],
+                [
+                    {text: '📍 Отправить геопозицию', request_location: true}
+                ]
             ],
             resize_keyboard: true,
         }
