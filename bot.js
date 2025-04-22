@@ -91,6 +91,11 @@ bot.on('message', (msg) => {
         return handleCalendarSchedule(msg);
     }
 
+    if (msg.location) {
+        const { latitude, longitude } = msg.location;
+        // дальше можно использовать API вроде timezonedb или Google TimeZone API
+    }
+
     if (!state) return;
 
     const { step, answers, date } = state;
@@ -103,7 +108,7 @@ bot.on('message', (msg) => {
     } else if (step === 1) {
         const [time, text] = answers;
 
-        handleSetReminder(msg, `${date} ${time} ${text}`, true);
+        handleSetReminder(msg, [`${date} ${time} ${text}`]);
         userStates.delete(userId);
     }
 });
@@ -116,6 +121,7 @@ function mainMenu() {
                     {text: '📅 Запланировать', callback_query: 'schedule'},
                     {text: '📋 Список', callback_query: 'list'},
                     {text: '📖 Команды', callback_query: 'help'},
+                    {text: '📍 Отправить геопозицию', request_location: true}
                 ],
             ],
             resize_keyboard: true,
@@ -152,9 +158,9 @@ function handleCalendarSchedule(msg) {
     calendar.startNavCalendar(msg);
 }
 
-function handleSetReminder(msg, match, isInline = false) {
+function handleSetReminder(msg, match) {
     const chatId = msg.chat.id;
-    const text = isInline ? match : match[1];
+    const text = match[1];
 
     const parsed = chrono.parse(text)[0];
     console.log(chrono.parse(text))
