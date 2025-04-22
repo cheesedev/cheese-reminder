@@ -179,6 +179,7 @@ function handleSetReminder(msg, match) {
     const text = match[1];
 
     const state = userStates.get(msg.from.id);
+    console.log(state);
     const timezone = state?.timezone || 'UTC'; // по умолчанию — UTC
 
     const parsed = chrono.parse(text)[0];
