@@ -204,11 +204,13 @@ function handleSetReminder(msg, match) {
 }
 
 async function getTimezoneFromCoords(lat, lon) {
+    console.log(lat, lon)
     const url = `http://api.geonames.org/timezoneJSON?lat=${lat}&lng=${lon}&username=${geoName}`;
 
     try {
         const res = await fetch(url);
         const data = await res.json();
+        console.log(data)
 
         if (data.timezoneId) {
             return data.timezoneId;
