@@ -1,8 +1,8 @@
 import { config } from 'dotenv';
 import TelegramBot from 'node-telegram-bot-api';
 import Calendar from 'telegram-inline-calendar';
-import chrono from 'chrono-node/ru';
-import db from './db/reminder-db';
+import * as chrono from 'chrono-node/ru';
+import * as db from './db/reminder-db.js';
 import fetch from 'node-fetch';
 import { DateTime } from 'luxon';
 
