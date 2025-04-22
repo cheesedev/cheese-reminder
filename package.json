@@ -1,0 +1,9 @@
+{
+  "dependencies": {
+    "better-sqlite3": "^11.9.1",
+    "chrono-node": "^2.8.0",
+    "dotenv": "^16.4.7",
+    "node-telegram-bot-api": "^0.66.0",
+    "telegram-inline-calendar": "^1.10.0"
+  }
+}
