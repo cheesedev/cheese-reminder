@@ -194,7 +194,7 @@ function handleSetReminder(msg, match) {
     const originalDate = parsed.date();
 
     // Преобразуем в нужную таймзону
-    const time = DateTime.fromJSDate(originalDate, { zone: 'UTC' }).setZone(timezone);
+    const time = DateTime.fromJSDate(originalDate, { zone: 'UTC' });
     const remindAt = time.toMillis();
 
     const task = text.replace(parsed.text, '').trim();
