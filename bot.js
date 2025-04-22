@@ -94,6 +94,7 @@ bot.on('message', async (msg) => {
         if (timezone) {
             const currentState = userStates.get(userId) || {};
             userStates.set(userId, { ...currentState, timezone });
+            console.log(userStates.get(userId))
             bot.sendMessage(chatId, `✅ Часовой пояс установлен: ${timezone}`);
         } else {
             bot.sendMessage(chatId, `⚠️ Не удалось определить часовой пояс.`);
@@ -112,7 +113,7 @@ bot.on('message', async (msg) => {
 
     if (!state) return;
 
-    const { step, answers, date, timezone } = state;
+    const { step, answers, date } = state;
 
     answers[step] = msg.text;
 
@@ -123,7 +124,8 @@ bot.on('message', async (msg) => {
         const [time, text] = answers;
 
         handleSetReminder(msg, ['', `${date} ${time} ${text}`]);
-        userStates.set(userId, { date: '', step: -1, answers: [], timezone });
+        const currentState = userStates.get(userId) || {};
+        userStates.set(userId, { ...currentState, date: '', step: -1, answers: [] });
     }
 });
 
