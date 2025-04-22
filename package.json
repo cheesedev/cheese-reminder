@@ -1,4 +1,7 @@
 {
+  "scripts": {
+    "start": "node index.js"
+  },
   "dependencies": {
     "better-sqlite3": "^11.9.1",
     "chrono-node": "^2.8.0",
