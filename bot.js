@@ -108,7 +108,7 @@ bot.on('message', (msg) => {
     } else if (step === 1) {
         const [time, text] = answers;
 
-        handleSetReminder(msg, [`${date} ${time} ${text}`]);
+        handleSetReminder(msg, ['', `${date} ${time} ${text}`]);
         userStates.delete(userId);
     }
 });
