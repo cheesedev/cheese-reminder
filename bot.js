@@ -75,7 +75,8 @@ bot.on("callback_query", (query) => {
     if (query.message.message_id == calendar.chats.get(query.message.chat.id)) {
         let res = calendar.clickButtonCalendar(query);
         if (res !== -1) {
-            userStates.set(userId, { date: res, step: 0, answers: [] });
+            const currentState = userStates.get(userId) || {};
+            userStates.set(userId, { ...currentState, date: res, step: 0, answers: [] });
             bot.sendMessage(query.message.chat.id, "В какое время напомнить? Пример: 21:00");
         }
     }
