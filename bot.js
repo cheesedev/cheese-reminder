@@ -159,11 +159,12 @@ function handleCalendarSchedule(msg) {
 }
 
 function handleSetReminder(msg, match) {
+    console.log(match)
     const chatId = msg.chat.id;
     const text = match[1];
+    console.log(text)
 
     const parsed = chrono.parse(text)[0];
-    console.log(chrono.parse(text))
     console.log(parsed)
     if (!parsed) {
         return bot.sendMessage(chatId, '⛔️ Не смог распознать дату. Примеры: "завтра в 10 утра", "10 апреля в 5 вечера"');
