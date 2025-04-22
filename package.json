@@ -1,6 +1,6 @@
 {
   "scripts": {
-    "start": "node index.js"
+    "start": "node bot.js"
   },
   "dependencies": {
     "better-sqlite3": "^11.9.1",
