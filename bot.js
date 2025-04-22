@@ -16,7 +16,9 @@ const calendar = new Calendar(bot, {
 const userStates = new Map();
 
 const scheduleReminder = (reminder) => {
+    console.log(reminder);
     const delay = reminder.remind_at - Date.now();
+    console.log(delay);
     if (delay > 0) {
         setTimeout(() => {
             bot.sendMessage(reminder.chat_id, `🔔 Напоминаю: ${reminder.task}`);
@@ -128,7 +130,7 @@ function handleReminderList(chatId) {
         return bot.sendMessage(chatId, '🕳 Нет активных напоминаний');
     }
 
-    const list = reminders.map(r => `🕑 ${new Date(r.remind_at).toLocaleString()} — ${r.task}`).join('\n');
+    const list = reminders.map(r => `🕑 id: ${r.id} ${new Date(r.remind_at).toLocaleString()} — ${r.task}`).join('\n');
 
     bot.sendMessage(chatId, `📋 Ваши напоминания:\n\n${list}`);
 }
