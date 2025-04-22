@@ -1,11 +1,12 @@
-require('dotenv').config();
+import { config } from 'dotenv';
+import TelegramBot from 'node-telegram-bot-api';
+import Calendar from 'telegram-inline-calendar';
+import chrono from 'chrono-node/ru';
+import db from './db/reminder-db';
+import fetch from 'node-fetch';
+import { DateTime } from 'luxon';
 
-const TelegramBot = require('node-telegram-bot-api');
-const Calendar = require('telegram-inline-calendar');
-const chrono = require('chrono-node/ru');
-const fetch = require('node-fetch');
-const { DateTime } = require('luxon');
-const db = require('./db/reminder-db');
+config();
 
 const token = process.env.TELEGRAM_BOT_TOKEN
 const geoName = process.env.GEONAMES_USERNAME
