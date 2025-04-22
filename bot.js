@@ -3,9 +3,12 @@ require('dotenv').config();
 const TelegramBot = require('node-telegram-bot-api');
 const Calendar = require('telegram-inline-calendar');
 const chrono = require('chrono-node/ru');
+const fetch = require('node-fetch');
+const { DateTime } = require('luxon');
 const db = require('./db/reminder-db');
 
 const token = process.env.TELEGRAM_BOT_TOKEN
+const geoName = process.env.GEONAMES_USERNAME
 const bot = new TelegramBot(token, {polling: true});
 const calendar = new Calendar(bot, {
     date_format: 'DD-MM-YYYY',
@@ -77,11 +80,26 @@ bot.on("callback_query", (query) => {
     }
 });
 
-bot.on('message', (msg) => {
+bot.on('message', async (msg) => {
     const text = msg.text;
     const userId = msg.from.id;
     const chatId = msg.chat.id;
     const state = userStates.get(userId);
+
+    if (msg.location) {
+        const { latitude, longitude } = msg.location;
+        const timezone = await getTimezoneFromCoords(latitude, longitude);
+
+        if (timezone) {
+            const currentState = userStates.get(userId) || {};
+            userStates.set(userId, { ...currentState, timezone });
+            bot.sendMessage(chatId, `✅ Часовой пояс установлен: ${timezone}`);
+        } else {
+            bot.sendMessage(chatId, `⚠️ Не удалось определить часовой пояс.`);
+        }
+
+        return;
+    }
 
     if (text === '📋 Список') {
         return handleReminderList(msg.chat.id);
@@ -91,14 +109,9 @@ bot.on('message', (msg) => {
         return handleCalendarSchedule(msg);
     }
 
-    if (msg.location) {
-        const { latitude, longitude } = msg.location;
-        // дальше можно использовать API вроде timezonedb или Google TimeZone API
-    }
-
     if (!state) return;
 
-    const { step, answers, date } = state;
+    const { step, answers, date, timezone } = state;
 
     answers[step] = msg.text;
 
@@ -109,7 +122,7 @@ bot.on('message', (msg) => {
         const [time, text] = answers;
 
         handleSetReminder(msg, ['', `${date} ${time} ${text}`]);
-        userStates.delete(userId);
+        userStates.set(userId, { date: '', step: -1, answers: [], timezone });
     }
 });
 
@@ -159,27 +172,48 @@ function handleCalendarSchedule(msg) {
 }
 
 function handleSetReminder(msg, match) {
-    console.log(`---------------------match------------------------`)
-    console.log(match)
     const chatId = msg.chat.id;
     const text = match[1];
-    console.log(`----------------------text--------------------------`)
-    console.log(text)
+
+    const state = userStates.get(msg.from.id);
+    const timezone = state?.timezone || 'UTC'; // по умолчанию — UTC
 
     const parsed = chrono.parse(text)[0];
     if (!parsed) {
-        return bot.sendMessage(chatId, '⛔️ Не смог распознать дату. Примеры: "завтра в 10 утра", "10 апреля в 5 вечера"');
+        return bot.sendMessage(chatId, '⛔️ Не смог распознать дату. Примеры: "завтра в 10 утра", "25 августа в 18:00"');
     }
 
-    const time = parsed.date();
+    const originalDate = parsed.date();
+
+    // Преобразуем в нужную таймзону
+    const time = DateTime.fromJSDate(originalDate, { zone: 'UTC' }).setZone(timezone);
+    const remindAt = time.toMillis();
+
     const task = text.replace(parsed.text, '').trim();
-    const remindAt = time?.getTime();
 
     if (!remindAt || remindAt <= Date.now()) {
-        return bot.sendMessage(chatId, 'Не смог распознать корректное время. Пример: /напомни Купить хлеб через 15 минут');
+        return bot.sendMessage(chatId, '⛔️ Время указано некорректно или в прошлом.');
     }
 
     const id = db.addReminder(chatId, task, remindAt);
-    bot.sendMessage(chatId, `✅ Запомнил. ID: ${id}, задача: "${task}" в ${time.toLocaleString()}`);
+    bot.sendMessage(chatId, `✅ Запомнил. ID: ${id}, задача: "${task}" в ${time.setZone(timezone).toFormat('dd.MM.yyyy HH:mm')} (${timezone})`);
     scheduleReminder({ id, chat_id: chatId, task, remind_at: remindAt });
+}
+
+async function getTimezoneFromCoords(lat, lon) {
+    const url = `http://api.geonames.org/timezoneJSON?lat=${lat}&lng=${lon}&username=${geoName}`;
+
+    try {
+        const res = await fetch(url);
+        const data = await res.json();
+
+        if (data.timezoneId) {
+            return data.timezoneId;
+        } else {
+            throw new Error('Не удалось определить таймзону');
+        }
+    } catch (err) {
+        console.error(err);
+        return null;
+    }
 }
