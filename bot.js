@@ -42,7 +42,6 @@ bot.onText(/\/старт|\/start/, (msg) => {
 });
 
 bot.onText(/\/напомни (.+)/i, (msg, match) => {
-    console.log(typeof match);
     return handleSetReminder(msg, match)
 });
 
@@ -95,7 +94,6 @@ bot.on('message', async (msg) => {
         if (timezone) {
             const currentState = userStates.get(userId) || {};
             userStates.set(userId, { ...currentState, timezone });
-            console.log(userStates.get(userId))
             bot.sendMessage(chatId, `✅ Часовой пояс установлен: ${timezone}`);
         } else {
             bot.sendMessage(chatId, `⚠️ Не удалось определить часовой пояс.`);
@@ -183,7 +181,6 @@ function handleSetReminder(msg, match) {
     const text = match[1];
 
     const state = userStates.get(msg.from.id);
-    console.log(state);
     const timezone = state?.timezone || 'UTC'; // по умолчанию — UTC
 
     const parsed = chrono.parse(text)[0];
@@ -192,6 +189,7 @@ function handleSetReminder(msg, match) {
     }
 
     const originalDate = parsed.date();
+    const time = DateTime.fromJSDate(originalDate, { zone: 'UTC' });
 
     const dt = DateTime.fromObject({
         year: originalDate.getFullYear(),
@@ -203,10 +201,6 @@ function handleSetReminder(msg, match) {
     }, { zone: timezone });
 
     const remindAt = dt.toMillis();
-
-    // Преобразуем в нужную таймзону
-    // const time = DateTime.fromJSDate(originalDate, { zone: 'UTC' });
-    // const remindAt = time.toMillis();
 
     const task = text.replace(parsed.text, '').trim();
 
@@ -220,13 +214,11 @@ function handleSetReminder(msg, match) {
 }
 
 async function getTimezoneFromCoords(lat, lon) {
-    console.log(lat, lon)
     const url = `http://api.geonames.org/timezoneJSON?lat=${lat}&lng=${lon}&username=${geoName}`;
 
     try {
         const res = await fetch(url);
         const data = await res.json();
-        console.log(data)
 
         if (data.timezoneId) {
             return data.timezoneId;
