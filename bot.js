@@ -20,10 +20,8 @@ const calendar = new Calendar(bot, {
 const userStates = new Map();
 
 const scheduleReminder = (reminder) => {
-    const state = userStates.get(userId);
-    const { timezone } = state;
     console.log(reminder);
-    const delay = reminder.remind_at - DateTime.now().setZone(timezone);
+    const delay = reminder.remind_at - DateTime.now().setZone(reminder.timezone);
     console.log(delay);
     if (delay > 0) {
         setTimeout(() => {
@@ -217,7 +215,7 @@ function handleSetReminder(msg, match) {
 
     const id = db.addReminder(chatId, task, remindAt);
     bot.sendMessage(chatId, `✅ Запомнил. ID: ${id}, задача: "${task}" в ${time.setZone(timezone).toFormat('dd.MM.yyyy HH:mm')} (${timezone})`);
-    scheduleReminder({ id, chat_id: chatId, task, remind_at: remindAt });
+    scheduleReminder({ id, chat_id: chatId, task, remind_at: remindAt, timezone: timezone });
 }
 
 async function getTimezoneFromCoords(lat, lon) {
