@@ -155,7 +155,7 @@ function mainMenu() {
 }
 
 function handleReminderList(chatId) {
-    const reminders = db.getReminders(chatId);
+    const reminders = db.getUserReminders(chatId);
     const timezone = db.getUserTimezone(chatId) || 'UTC';
 
     if (reminders.length === 0) {
