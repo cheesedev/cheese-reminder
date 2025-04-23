@@ -21,7 +21,7 @@ const userStates = new Map();
 
 const scheduleReminder = (reminder) => {
     console.log(reminder);
-    const delay = DateTime.fromMillis(reminder.remind_at, {zone: reminder.timezone}) - DateTime.now().setZone(reminder.timezone);
+    const delay = reminder.remind_at - Date.now();
     console.log(delay);
     if (delay > 0) {
         setTimeout(() => {
@@ -130,7 +130,7 @@ bot.on('message', async (msg) => {
     } else if (step === 1) {
         const [time, text] = answers;
 
-        handleSetReminder(msg, ['', `${date} ${time} ${text}`]);
+        handleSetReminderZone(msg, ['', `${date} ${time} ${text}`]);
         const currentState = userStates.get(userId) || {};
         userStates.set(userId, { ...currentState, date: '', step: -1, answers: [] });
     }
@@ -183,7 +183,7 @@ function handleCalendarSchedule(msg) {
     calendar.startNavCalendar(msg);
 }
 
-function handleSetReminder(msg, match) {
+function handleSetReminderZone(msg, match) {
     const chatId = msg.chat.id;
     const text = match[1];
     const timezone = db.getUserTimezone(msg.chat.id) || 'UTC'; // по умолчанию — UTC
@@ -215,7 +215,30 @@ function handleSetReminder(msg, match) {
 
     const id = db.addReminder(chatId, task, remindAt);
     bot.sendMessage(chatId, `✅ Запомнил. ID: ${id}, задача: "${task}" в ${time.setZone(timezone).toFormat('dd.MM.yyyy HH:mm')} (${timezone})`);
-    scheduleReminder({ id, chat_id: chatId, task, remind_at: remindAt, timezone: timezone });
+    scheduleReminder({ id, chat_id: chatId, task, remind_at: remindAt });
+}
+
+function handleSetReminder(msg, match) {
+    const chatId = msg.chat.id;
+    const text = match[1];
+
+    const parsed = chrono.parse(text)[0];
+    if (!parsed) {
+        return bot.sendMessage(chatId, '⛔️ Не смог распознать дату. Примеры: "завтра в 10 утра", "10 апреля в 5 вечера"');
+    }
+
+    const time = parsed.date();
+    const task = text.replace(parsed.text, '').trim();
+    const remindAt = time?.getTime();
+
+    if (!remindAt || remindAt <= Date.now()) {
+        return bot.sendMessage(chatId, 'Не смог распознать корректное время. Пример: /напомни Купить хлеб через 15 минут');
+    }
+
+    const id = db.addReminder(chatId, task, remindAt);
+    bot.sendMessage(chatId, `✅ Запомнил. ID: ${id}, задача: "${task}" в ${time.toLocaleString()}`);
+    scheduleReminder({ id, chat_id: chatId, task, remind_at: remindAt });
+
 }
 
 async function getTimezoneFromCoords(lat, lon) {
