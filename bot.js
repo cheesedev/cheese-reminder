@@ -21,7 +21,7 @@ const userStates = new Map();
 
 const scheduleReminder = (reminder) => {
     console.log(reminder);
-    const delay = reminder.remind_at - DateTime.now().setZone(reminder.timezone);
+    const delay = DateTime.fromMillis(reminder.remind_at, {zone: reminder.timezone}) - DateTime.now().setZone(reminder.timezone);
     console.log(delay);
     if (delay > 0) {
         setTimeout(() => {
