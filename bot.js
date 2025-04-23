@@ -214,13 +214,14 @@ function handleSetReminderZone(msg, match) {
     }
 
     const id = db.addReminder(chatId, task, remindAt);
-    bot.sendMessage(chatId, `✅ Запомнил. ID: ${id}, задача: "${task}" в ${time.setZone(timezone).toFormat('dd.MM.yyyy HH:mm')} (${timezone})`);
+    bot.sendMessage(chatId, `✅ Запомнил. ID: ${id}, задача: "${task}" в ${time.toFormat('dd.MM.yyyy HH:mm')} (${timezone})`);
     scheduleReminder({ id, chat_id: chatId, task, remind_at: remindAt });
 }
 
 function handleSetReminder(msg, match) {
     const chatId = msg.chat.id;
     const text = match[1];
+    const timezone = db.getUserTimezone(msg.chat.id) || 'UTC'; // по умолчанию — UTC
 
     const parsed = chrono.parse(text)[0];
     if (!parsed) {
@@ -236,7 +237,7 @@ function handleSetReminder(msg, match) {
     }
 
     const id = db.addReminder(chatId, task, remindAt);
-    bot.sendMessage(chatId, `✅ Запомнил. ID: ${id}, задача: "${task}" в ${time.toLocaleString()}`);
+    bot.sendMessage(chatId, `✅ Запомнил. ID: ${id}, задача: "${task}" в ${DateTime.fromJSDate(time, { zone: 'UTC' }).setZone(timezone).toLocaleString()} (${timezone})`);
     scheduleReminder({ id, chat_id: chatId, task, remind_at: remindAt });
 
 }
