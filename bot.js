@@ -162,7 +162,7 @@ function handleReminderList(chatId) {
         return bot.sendMessage(chatId, '🕳 Нет активных напоминаний');
     }
 
-    const list = reminders.map(r => `🕑 id: ${r.id} ${DateTime.fromMillis(r.remind_at, { zone: timezone })} — ${r.task}`).join('\n');
+    const list = reminders.map(r => `🕑 id: ${r.id} ${DateTime.fromMillis(r.remind_at, { zone: timezone }).toFormat('dd.MM.yyyy HH:mm')} — ${r.task}`).join('\n');
 
     bot.sendMessage(chatId, `📋 Ваши напоминания:\n\n${list}`);
 }
@@ -238,7 +238,7 @@ function handleSetReminder(msg, match) {
     }
 
     const id = db.addReminder(chatId, task, remindAt);
-    bot.sendMessage(chatId, `✅ Запомнил. ID: ${id}, задача: "${task}" в ${DateTime.fromMillis(remindAt, { zone: timezone })} (${timezone})`);
+    bot.sendMessage(chatId, `✅ Запомнил. ID: ${id}, задача: "${task}" в ${DateTime.fromMillis(remindAt, { zone: timezone }).toFormat('dd.MM.yyyy HH:mm')} (${timezone})`);
     scheduleReminder({ id, chat_id: chatId, task, remind_at: remindAt });
 
 }
