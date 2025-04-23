@@ -194,7 +194,7 @@ function handleSetReminder(msg, match) {
     }
 
     const originalDate = parsed.date();
-    const time = DateTime.fromJSDate(originalDate, { zone: 'UTC' });
+    const time = DateTime.fromJSDate(originalDate);
 
     const dt = DateTime.fromObject({
         year: originalDate.getFullYear(),
