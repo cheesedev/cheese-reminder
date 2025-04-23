@@ -20,8 +20,10 @@ const calendar = new Calendar(bot, {
 const userStates = new Map();
 
 const scheduleReminder = (reminder) => {
+    const state = userStates.get(userId);
+    const { timezone } = state;
     console.log(reminder);
-    const delay = reminder.remind_at - Date.now();
+    const delay = reminder.remind_at - DateTime.now().setZone(timezone);
     console.log(delay);
     if (delay > 0) {
         setTimeout(() => {
@@ -194,7 +196,7 @@ function handleSetReminder(msg, match) {
     }
 
     const originalDate = parsed.date();
-    const time = DateTime.fromJSDate(originalDate);
+    const time = DateTime.fromJSDate(originalDate, { zone: 'UTC' });
 
     const dt = DateTime.fromObject({
         year: originalDate.getFullYear(),
