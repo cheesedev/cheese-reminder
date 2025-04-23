@@ -33,12 +33,16 @@ const scheduleReminder = (reminder) => {
     }
 };
 
-for (const reminder of db.getReminders()) {
-    scheduleReminder(reminder);
-}
-
 bot.onText(/\/старт|\/start/, (msg) => {
-    bot.sendMessage(msg.chat.id, '👋 Привет! Чем помочь?', mainMenu());
+    const timezone = db.getUserTimezone(msg.chat.id);
+    bot.sendMessage(
+        msg.chat.id,
+        `👋 Привет! Чем помочь? \n ${timezone 
+            ? `Твой часовой пояс - ${timezone}` 
+            : 'Установи свой часовой пояс с помощью кнопки в меню, чтобы напоминания корректно работали'}
+            `,
+        mainMenu()
+    );
 });
 
 bot.onText(/\/напомни (.+)/i, (msg, match) => {
@@ -87,6 +91,8 @@ bot.on('message', async (msg) => {
     const chatId = msg.chat.id;
     const state = userStates.get(userId);
 
+    console.log(state)
+
     if (msg.location) {
         const { latitude, longitude } = msg.location;
         const timezone = await getTimezoneFromCoords(latitude, longitude);
@@ -94,6 +100,7 @@ bot.on('message', async (msg) => {
         if (timezone) {
             const currentState = userStates.get(userId) || {};
             userStates.set(userId, { ...currentState, timezone });
+            db.setUserTimezone(userId, timezone);
             bot.sendMessage(chatId, `✅ Часовой пояс установлен: ${timezone}`);
         } else {
             bot.sendMessage(chatId, `⚠️ Не удалось определить часовой пояс.`);
@@ -110,7 +117,7 @@ bot.on('message', async (msg) => {
         return handleCalendarSchedule(msg);
     }
 
-    if (!state) return;
+    if (!state || state.step < 0 || !state.answers) return;
 
     const { step, answers, date } = state;
 
@@ -139,7 +146,7 @@ function mainMenu() {
                     {text: '📖 Команды', callback_query: 'help'},
                 ],
                 [
-                    {text: '📍 Отправить геопозицию', request_location: true}
+                    {text: '📍 Определить часовой пояс', request_location: true}
                 ]
             ],
             resize_keyboard: true,
@@ -179,9 +186,7 @@ function handleCalendarSchedule(msg) {
 function handleSetReminder(msg, match) {
     const chatId = msg.chat.id;
     const text = match[1];
-
-    const state = userStates.get(msg.from.id);
-    const timezone = state?.timezone || 'UTC'; // по умолчанию — UTC
+    const timezone = db.getUserTimezone(msg.chat.id) || 'UTC'; // по умолчанию — UTC
 
     const parsed = chrono.parse(text)[0];
     if (!parsed) {
@@ -204,7 +209,7 @@ function handleSetReminder(msg, match) {
 
     const task = text.replace(parsed.text, '').trim();
 
-    if (!remindAt || remindAt <= Date.now()) {
+    if (!time || time.toMillis() <= Date.now()) {
         return bot.sendMessage(chatId, '⛔️ Время указано некорректно или в прошлом.');
     }
 
@@ -230,3 +235,13 @@ async function getTimezoneFromCoords(lat, lon) {
         return null;
     }
 }
+
+
+function initBot() {
+
+    for (const reminder of db.getReminders()) {
+        scheduleReminder(reminder);
+    }
+}
+
+initBot();
